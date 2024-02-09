@@ -36,10 +36,10 @@ services:
       - ./docker/mysql/config:/etc/mysql/conf.d
       - ./docker/mysql/initdb.d:/docker-entrypoint-initdb.d
     environment:
-      - MYSQL_ROOT_PASSWORD=pscale_pw_7BXX6LdSzFZ4RBJM6KjrYRx3CSD9x9TJL1kCEBYAYU3
+      - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=hackathon_last
-      - MYSQL_USER=xd8wwpy3ug6typ24xpsv
-      - MYSQL_PASSWORD=pscale_pw_7BXX6LdSzFZ4RBJM6KjrYRx3CSD9x9TJL1kCEBYAYU3
+      - MYSQL_USER=posse
+      - MYSQL_PASSWORD=password
       - TZ=Asia/Tokyo
 # 使いたい人はコメントアウトを解除してください
   phpmyadmin:
@@ -47,8 +47,8 @@ services:
     environment:
       - PMA_ARBITRARY=0
       - PMA_HOSTS=mysql
-      - PMA_USER=xd8wwpy3ug6typ24xpsv
-      - PMA_PASSWORD=pscale_pw_7BXX6LdSzFZ4RBJM6KjrYRx3CSD9x9TJL1kCEBYAYU3
+      - PMA_USER=posse
+      - PMA_PASSWORD=password
     links:
       - mysql
     ports:
