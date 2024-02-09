@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  app:
+    build: ./docker/php
+    volumes:
+      - ./src:/work/web
+
+  # appやwebにnode.jsをインストールするのは単一責任の原則に反するので、別のコンテナにする
+  node:
+    image: node:18-alpine
+    ports:
+      - 5173:5173
+    volumes:
+      - ./src:/work/web
+    working_dir: /work/web
+    tty: true
+    depends_on:
+      - app
+
+  web:
+    image: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./src:/work/web
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    volumes:
+      - ./docker/db-store:/var/lib/mysql
+      - ./docker/mysql/config:/etc/mysql/conf.d
+      - ./docker/mysql/initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=pscale_pw_7BXX6LdSzFZ4RBJM6KjrYRx3CSD9x9TJL1kCEBYAYU3
+      - MYSQL_DATABASE=hackathon_last
+      - MYSQL_USER=xd8wwpy3ug6typ24xpsv
+      - MYSQL_PASSWORD=pscale_pw_7BXX6LdSzFZ4RBJM6KjrYRx3CSD9x9TJL1kCEBYAYU3
+      - TZ=Asia/Tokyo
+# 使いたい人はコメントアウトを解除してください
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=0
+      - PMA_HOSTS=mysql
+      - PMA_USER=xd8wwpy3ug6typ24xpsv
+      - PMA_PASSWORD=pscale_pw_7BXX6LdSzFZ4RBJM6KjrYRx3CSD9x9TJL1kCEBYAYU3
+    links:
+      - mysql
+    ports:
+      - 1234:80
