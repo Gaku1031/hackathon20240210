@@ -1,22 +1,25 @@
-FROM php:8.2.12-fpm-alpine3.18
+FROM devilbox/php-fpm-8.1:latest
+COPY php.ini /usr/local/etc/php/
 
-# 必要なパッケージをインストール
-RUN apk add --no-cache \
-  linux-headers \
-  libzip-dev \
-  zlib-dev \
-  mariadb-client \
-  unzip \
-  curl \
-  vim \
-  bash \
-  && docker-php-ext-install zip pdo_mysql sockets \
-  && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
-  && composer self-update --2 \
-  && echo 'export PATH="$PATH:$HOME/.composer/vendor/bin"' >> ~/.bashrc
+ADD setup/xdebug.ini /tmp/xdebug.ini
 
-# PHPの設定ファイルをコピー
-COPY php.ini /usr/local/etc/php/conf.d/custom.ini
+RUN apt-get update \
+  && apt-get install -y libzip-dev zlib1g-dev unzip libpq-dev \
+  && docker-php-ext-install zip
 
-# ワーキングディレクトリを設定
+# nodejs install
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - \
+  && apt-get install -y nodejs \
+  && apt-get install -y vim \
+  && docker-php-ext-install sockets pdo_pgsql \
+  && pecl install xdebug \
+  && docker-php-ext-enable xdebug
+
+# Composer2.0 install
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer self-update --2
+ENV COMPOSER_ALLOW_SUPERUSER 1
+ENV COMPOSER_HOME /composer
+ENV PATH $PATH:/composer/vendor/bin
+
 WORKDIR /work/web
