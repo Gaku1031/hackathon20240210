@@ -1,22 +1,18 @@
-version: "3.8"
-
 services:
+  front:
+    build:
+      context: ./
+      dockerfile: ./docker/front/Dockerfile
+    tty: true
+    working_dir: /app
+    volumes:
+      - ./front:/app
+      # - ./api/docs/openapi:/app/openapi
+
   app:
     build: ./docker/php
     volumes:
-      - ./src:/work/web
-
-  # appやwebにnode.jsをインストールするのは単一責任の原則に反するので、別のコンテナにする
-  node:
-    image: node:18-alpine
-    ports:
-      - 5173:5173
-    volumes:
-      - ./src:/work/web
-    working_dir: /work/web
-    tty: true
-    depends_on:
-      - app
+      - ./api/web:/work/web
 
   web:
     image: nginx
@@ -24,32 +20,19 @@ services:
       - 80:80
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./src:/work/web
+      - ./api/web:/work/web
     depends_on:
       - app
 
-  mysql:
-    image: mysql:8.0
-    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
-    volumes:
-      - ./docker/db-store:/var/lib/mysql
-      - ./docker/mysql/config:/etc/mysql/conf.d
-      - ./docker/mysql/initdb.d:/docker-entrypoint-initdb.d
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=hackathon_last
-      - MYSQL_USER=posse
-      - MYSQL_PASSWORD=password
-      - TZ=Asia/Tokyo
-# 使いたい人はコメントアウトを解除してください
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    environment:
-      - PMA_ARBITRARY=0
-      - PMA_HOSTS=mysql
-      - PMA_USER=posse
-      - PMA_PASSWORD=password
-    links:
-      - mysql
-    ports:
-      - 1234:80
+  postgresql:
+      image: postgres:14.7
+      restart: always
+      environment:
+        POSTGRES_PASSWORD: password
+        POSTGRES_USER: last
+        POSTGRES_DB: qiita
+      volumes:
+        - ./docker/postgresql/initdb.d:/docker-entrypoint-initdb.d
+        - ./api/db-store:/var/lib/postgresql/data
+      ports:
+        - 5432:5432
